@@ -3,6 +3,7 @@ import core.Game;
 import slidingpuzzle.SlidingPuzzleGame;
 import dotsandboxes.DotsAndBoxesGame;
 import iohandler.Input;
+import quorridor.QuorridorGame;
 import core.Player;
 
 public class GameSession {
@@ -41,9 +42,10 @@ public class GameSession {
 
         System.out.println("1 - Sliding Puzzle");
         System.out.println("2 - Dots and Boxes");
+        System.out.println("3 - Quorridor");
 
         while (true) {
-            int choice = input.nextInt("Enter choice: ", 2);
+            int choice = input.nextInt("Enter game choice: ", 3);
 
             switch (choice) {
                 case 1:
@@ -51,6 +53,9 @@ public class GameSession {
 
                 case 2:
                     return GameType.DOTS_AND_BOXES;
+                
+                case 3:
+                    return GameType.QUORRIDOR;
 
                 default:
                     System.out.println("Invalid choice. Please try again.\n");
@@ -125,10 +130,13 @@ public class GameSession {
         while (true) { 
             switch (type) {
                 case SLIDING_PUZZLE:
-                    return new SlidingPuzzleGame(input, participants[0]);
+                    return new SlidingPuzzleGame(input, participants[0]); //TODO: FIX should be participants
 
                 case DOTS_AND_BOXES:
                     return new DotsAndBoxesGame(input, participants);
+
+                case QUORRIDOR:
+                    return new QuorridorGame(input, participants);
 
                 default:
                     throw new IllegalArgumentException("Unknown game type");
