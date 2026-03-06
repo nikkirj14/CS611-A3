@@ -2,7 +2,7 @@ package gamehandler;
 public enum GameType {
     DOTS_AND_BOXES(1, 2),
     SLIDING_PUZZLE(1, 1),
-    QUORRIDOR(1,2);
+    QUORRIDOR(2,2);
 
     private final int minPlayers;
     private final int maxPlayers;

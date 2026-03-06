@@ -18,12 +18,7 @@ public class QuorridorGame extends Game {
     
     public QuorridorGame(Input input, Player[] players) {
         super(input, 2); 
-        if (players.length == 1) {
-            users[0] = players[0];
-            users[1] = new Player("CPU",2);
-        } else {
-            users = players;
-        }
+        users = players;
     }
 
 
@@ -83,10 +78,6 @@ public class QuorridorGame extends Game {
 
     public void handleTurn(Board board, int player) {
         System.out.printf("%s's Move:\n", users[player].getName());
-            
-        // if (player.getName() == "CPU") {
-        //     return handleCPUTurn(board);
-        // }
 
         int type = getMoveType();
         if (type == 1) { // moving 
