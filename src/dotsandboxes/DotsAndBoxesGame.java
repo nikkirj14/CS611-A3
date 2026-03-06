@@ -81,8 +81,7 @@ public class DotsAndBoxesGame extends Game {
         int maxSize = 10;
         int var1 = this.input.nextInt("Enter puzzle height: ", maxSize);
         int var2 = this.input.nextInt("Enter puzzle width: ", maxSize);
-        Board board = new DotsAndBoxesBoard(var1, var2); 
-        return board;
+        return new DotsAndBoxesBoard(var1, var2); 
     }
 
     public int handleTurn(Board board, Player player) {
