@@ -8,8 +8,8 @@ import iohandler.Input;
 import core.Game;
 import core.Board;
 import core.Player;
-import dotsandboxes.Dot;
 import dotsandboxes.DotsAndBoxesBoard;
+import grid.Dot;
 
 public class QuorridorGame extends Game {
     
@@ -18,12 +18,7 @@ public class QuorridorGame extends Game {
     
     public QuorridorGame(Input input, Player[] players) {
         super(input, 2); 
-        if (players.length == 1) {
-            users[0] = players[0];
-            users[1] = new Player("CPU",2);
-        } else {
-            users = players;
-        }
+        users = players;
     }
 
 
@@ -38,7 +33,7 @@ public class QuorridorGame extends Game {
         int i = 1;
         while (!board.solved()) {
             i ^= 1; 
-            handleTurn(board,users[i]); // TO DO: maintain score?
+            handleTurn(board,i); // TO DO: maintain score?
         }
         return users[i];
 
@@ -48,26 +43,24 @@ public class QuorridorGame extends Game {
         int maxSize = 10;
         int var1 = this.input.nextInt("Enter puzzle height: ", maxSize);
         int var2 = this.input.nextInt("Enter puzzle width: ", maxSize);
-        return new QuorridorBoard(var1, var2); 
+        return new QuorridorBoard(var1, var2, users); 
     }
 
     private int getMoveType() {
-        
         return this.input.nextInt("Select a move type - (1) move to adjacent tile, or (2) draw border: ",2);
-
     }
 
     
     private String getStartInput() {
-        
         return this.input.nextLine("Enter start point: ");
-
     }
 
     private String getEndInput() {
-        
         return this.input.nextLine("Enter end point: ");
+    }
 
+    public Player getPlayer(int index) {
+        return users[index];
     }
 
     private String getDirection() {
@@ -83,22 +76,25 @@ public class QuorridorGame extends Game {
 
     }
 
-    public void handleTurn(Board board, Player player) {
-        System.out.printf("%s's Move:\n", player.getName());
-            
-        // if (player.getName() == "CPU") {
-        //     return handleCPUTurn(board);
-        // }
+    public void handleTurn(Board board, int player) {
+        System.out.printf("%s's Move:\n", users[player].getName());
 
         int type = getMoveType();
         if (type == 1) { // moving 
             while (true) {
                 String direction = getDirection();
-                if (! ((QuorridorBoard) board).validateMove(direction)) {
-                    System.out.println("Invalid move. Try again.");
+                int validation = ((QuorridorBoard) board).validateMove(direction, player);
+                if (validation == 0) {
+                    System.out.println("Outside of board bounds. Try again.");
+                    continue;
+                } else if (validation == 1) {
+                    System.out.println("Blocked by border. Try again.");
+                    continue;
+                } else if (validation == 2) {
+                    System.out.println("Tile is occupied. Try again.");
                     continue;
                 }
-                ((QuorridorBoard) board).move(player, direction);
+                ((QuorridorBoard) board).move(player, users[player], direction);
                     
                 board.print();
                 return;
@@ -119,13 +115,19 @@ public class QuorridorGame extends Game {
 
                 Dot startDot = ((QuorridorBoard) board).getDot(startPoint);
                 Dot endDot =  ((QuorridorBoard) board).getDot(endPoint);
-                    
-                if (! ((QuorridorBoard) board).validateBorder(startDot, endDot)) {
-                    System.out.println("Invalid move. Try again.");
+                
+                int validation = ((QuorridorBoard) board).validateBorder(startDot, endDot);
+                if (validation == 0) {
+                    System.out.println("Invalid border. Try again.");
                     continue;
-                } 
-                ((QuorridorBoard) board).drawBorder(startDot, endDot, player);
-                    
+                } else if (validation == 2) {
+                    System.out.println("Cannot completely block opponent. Try again.");
+                    continue;
+                }
+                
+                System.out.println("Border is valid");
+                ((QuorridorBoard) board).drawBorder(startDot, endDot, users[player]);
+                
                 board.print();
                 return;
             } 

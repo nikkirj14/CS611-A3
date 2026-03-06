@@ -1,4 +1,4 @@
-package dotsandboxes;
+package grid;
 import core.Player;
 import core.Tile;
 
@@ -66,6 +66,16 @@ public class Box extends Tile {
         return 0;
     }
 
+    public void fill(Player player) {
+        filled = true;
+        filledBy = player; 
+    }
+
+    public void free() {
+        filled = false;
+        filledBy = null;
+    }
+
     public Player isFilledBy() {
         return filledBy;
     }
@@ -73,6 +83,5 @@ public class Box extends Tile {
     public int getSidesDrawn() {
         return sidesDrawn;
     }
-    
 
 }

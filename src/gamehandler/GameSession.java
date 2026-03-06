@@ -55,6 +55,10 @@ public class GameSession {
                     return GameType.DOTS_AND_BOXES;
                 
                 case 3:
+                    if (players.length < 2) {
+                        System.out.println("Two players needed for this game! Pick another game or restart session.");
+                        continue;
+                    }
                     return GameType.QUORRIDOR;
 
                 default:
@@ -86,9 +90,9 @@ public class GameSession {
 
         int min = gameType.getMinPlayers(); 
         int max = gameType.getMaxPlayers(); 
-        int count = 1;
+        int count = players.length;
 
-        if (max > 1 && players.length > 1) {  
+        if (min != max & count != 1) {  
             while (true) {
                 count = input.nextInt("How many players for this game? ", max); //(" + min + "-" + max + "): "
 
@@ -99,17 +103,20 @@ public class GameSession {
         }
 
         Player[] selected = new Player[count];
+
+        boolean selectPlayersCase = (players.length > 1) &&
+                           (gameType == GameType.SLIDING_PUZZLE ||
+                            (gameType == GameType.DOTS_AND_BOXES && count < players.length));
         
-        if (players.length != count) {
+        if (selectPlayersCase) {
             System.out.println("Available players:");
             for (int i = 0; i < players.length; i++) {
                 System.out.println((i + 1) + " - " + players[i].getName());
             }
 
-            for (int i = 0; i < count; i++) {
-
+            for (int i = 0; i < max; i++) {
                 while (true) {
-                    int choice = input.nextInt("Select player by number: ", count+1) - 1;
+                    int choice = input.nextInt("Select player by number: ", players.length) - 1;
 
                     if (choice >= 0 && choice < players.length) {
                         selected[i] = players[choice];
@@ -130,7 +137,7 @@ public class GameSession {
         while (true) { 
             switch (type) {
                 case SLIDING_PUZZLE:
-                    return new SlidingPuzzleGame(input, participants[0]); //TODO: FIX should be participants
+                    return new SlidingPuzzleGame(input, participants[0]); 
 
                 case DOTS_AND_BOXES:
                     return new DotsAndBoxesGame(input, participants);

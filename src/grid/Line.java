@@ -1,4 +1,4 @@
-package dotsandboxes;
+package grid;
 import core.Player;
 
 public class Line {

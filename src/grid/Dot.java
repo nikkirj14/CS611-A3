@@ -1,4 +1,4 @@
-package dotsandboxes;
+package grid;
 
 public class Dot {
     private final int row;

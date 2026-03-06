@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.ArrayList;
 import core.Player;
 import core.Tile;
-import boardtwo.BoardTwo;
+import grid.GridBoard;
+import grid.Box;
+import grid.Direction;
+import grid.Dot;
+import grid.Line;
 
-public class DotsAndBoxesBoard extends BoardTwo {
+public class DotsAndBoxesBoard extends GridBoard {
 
     // int height;
     // int width;
