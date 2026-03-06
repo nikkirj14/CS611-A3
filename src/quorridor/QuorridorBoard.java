@@ -1,29 +1,36 @@
 package quorridor;
 
+import java.util.function.DoubleToIntFunction;
+
 import core.Player;
-import boardtwo.BoardTwo;
-import dotsandboxes.Dot;
-import dotsandboxes.DotsAndBoxesBoard;
-import dotsandboxes.Line;
-import dotsandboxes.Box;
-import dotsandboxes.Direction;
+import grid.Box;
+import grid.Direction;
+import grid.Dot;
+import grid.GridBoard;
+import grid.Line;
 
-public class QuorridorBoard extends BoardTwo {
+public class QuorridorBoard extends GridBoard {
 
-    int maxBorders;
-    Box pos1;
-    Box pos2;
+    protected int maxBorders;
+    protected Box[] position;
 
-    QuorridorBoard(int h, int w) {
+    protected int borders1;
+    protected int borders2;
+
+    QuorridorBoard(int h, int w, Player[] players) {
         super(h,w);
         maxBorders = Math.max(h,w) - 1;
-        pos1 = (Box) board[h-1][w/2];
+        position = new Box[2];
+        position[0] = (Box) board[h-1][w/2];
+        ((Box) board[h-1][w/2]).fill(players[0]);
+
         if (w % 2 != 0) {
-            pos2 = (Box) board[0][w/2];
+            position[1] = (Box) board[0][w/2];
+            ((Box) board[0][w/2]).fill(players[1]);
         } else {    
-            pos2 = (Box) board[0][w/2-1];   
-        }
-        
+            position[1] = (Box) board[0][w/2-1]; 
+            ((Box) board[0][w/2-1]).fill(players[1]);   
+        }     
     }
 
     @Override
@@ -56,6 +63,7 @@ public class QuorridorBoard extends BoardTwo {
         System.out.printf("*\n");
     }
 
+
     private void printRowVertical(int row) {
         System.out.print("   ");   
         for (int c = 0; c <= width; c++) {      // iterate over columns of vertical lines
@@ -74,9 +82,9 @@ public class QuorridorBoard extends BoardTwo {
 
             // add spacing between vertical lines (matches horizontal spacing)
             if (c < width) {
-                if (((Box) board[row][c]) == pos1) {
+                if (((Box) board[row][c]) == position[0]) {
                     System.out.print(ANSI_PURPLE_BACKGROUND + " X " + ANSI_RESET); 
-                } else if (((Box) board[row][c]) == pos2) {
+                } else if (((Box) board[row][c]) == position[1]) {
                     System.out.print(ANSI_BLUE_BACKGROUND + " X " + ANSI_RESET); 
                 }  else {
                     System.out.print("   ");         // space between columns
@@ -101,22 +109,87 @@ public class QuorridorBoard extends BoardTwo {
         System.out.printf("%s  ", letter);
     }
 
-    public boolean validateBorder(Dot a , Dot b) {
-        return true; //TODO
+    public int validateBorder(Dot a , Dot b) {
+        int rowDiff = Math.abs(a.getRow() - b.getRow());
+        int colDiff = Math.abs(a.getCol() - b.getCol());
+
+        if ((rowDiff == 2 && colDiff == 0) || (rowDiff == 0 && colDiff == 2)) {
+            Dot mid = getMidpoint(a,b);
+            Line line1 = getLineBetween(a,mid);
+            Line line2 = getLineBetween(mid,b);
+            if (line1.isEmpty() && line2.isEmpty()) {
+
+                if (willCompletelyBlockOpponent(a,mid,b)) {
+                    return 2;
+                }
+                return 1;
+            }
+        }
+
+        return 0;
     }
 
-    public boolean validateMove(String move) {
-        return true; //TODO
+    public int validateMove(String direction, int player) {
+    
+        Box currPos = position[player];
+        int r = currPos.getRow();
+        int c = currPos.getCol();
+
+        int newRow = r;
+        int newCol = c;
+        Line border = null;
+
+        switch (direction) {
+            case "R":
+                newCol = c + 1;
+                if (newCol >= width) {
+                    return 0;
+                }
+                border = verticalLines[r][c + 1]; 
+                break;
+            case "L":
+                newCol = c - 1;
+                if (newCol < 0) {
+                    return 0;
+                }
+                border = verticalLines[r][c]; 
+                break;
+            case "U":
+                newRow = r - 1;
+                if (newRow < 0) {
+                    return 0;
+                }
+                border = horizontalLines[r][c]; 
+                break;
+            case "D":
+                newRow = r + 1;
+                if (newRow >= height) {
+                    return 0;
+                }
+                border = horizontalLines[r + 1][c]; 
+                break;
+            default:
+                return 0;
+        }
+
+        if (border.isDrawn()) return 1;          // blocked by border
+        if (((Box) board[newRow][newCol]).isFilled()) return 2; // tile occupied
+        return 3; // valid
+    }
+
+    public boolean willCompletelyBlockOpponent(Dot a, Dot b, Dot c) {
+        return false; //TODO
     }
 
     public void drawBorder(Dot a, Dot b, Player player) {
-        Dot mid = getMidpoint(a, b);
+        Dot mid = getMidpoint(a, b); // for borders that span 2 units
 
-        Line line1 = getLineBetween(a,mid);
+        Line line1 = getLineBetween(a, mid);
         line1.draw(player);
 
-        Line line2 = getLineBetween(mid,b);
+        Line line2 = getLineBetween(mid, b);
         line2.draw(player);
+
 
         // TODO: 
         // check if less than max borders
@@ -124,11 +197,35 @@ public class QuorridorBoard extends BoardTwo {
     }
 
     private Dot getMidpoint(Dot a , Dot b) {
-        return null; //TODO
+        int r = (a.getRow() + b.getRow()) / 2;
+        int c = (a.getCol() + b.getCol()) / 2;
+
+        return grid[r][c];
     }
 
-    public void move(Player player, String direction) {
-        System.out.printf("   "); //TODO
+    public void move(int num, Player player, String direction) {
+        int currRow = position[num].getRow();
+        int currCol = position[num].getCol();
+        ((Box) board[currRow][currCol]).free();
+
+        int row = currRow;
+        int col = currCol;
+        // checking if within bounds of board and then if there is border blocking
+        if (direction.equals("R")) {
+            col = currCol + 1;
+            
+        } else if (direction.equals("L")) {
+            col = currCol - 1;
+            
+        } else if (direction.equals("U")) {
+            row = currRow - 1;
+
+        } else if (direction.equals("D")) {
+            row = currRow + 1;
+        }
+        
+        position[num] = (Box) board[row][col];
+        ((Box) board[row][col]).fill(player);
     }
 
     @Override

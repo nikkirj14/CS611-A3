@@ -8,6 +8,8 @@ import iohandler.Input;
 import core.Game;
 import core.Board;
 import core.Player;
+import grid.Dot;
+import grid.Line;
 
 public class DotsAndBoxesGame extends Game {
 
