@@ -1,8 +1,6 @@
 package quorridor;
 
-import dotsandboxes.DotsAndBoxesBoard;
 import gamehandler.GameResult;
-import grid.Line;
 import iohandler.Input;
 import core.Game;
 import core.Board;
@@ -10,13 +8,9 @@ import core.Player;
 import grid.Dot;
 
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class QuorridorGame extends Game {
-    protected int player1Score;
-    protected int player2Score;
-    
     public QuorridorGame(Input input, Player[] players) {
         super(input, 2); 
         if (players.length == 1) {
@@ -36,12 +30,19 @@ public class QuorridorGame extends Game {
         if (quit){
             return new GameResult(GameResult.Type.QUIT, null);
         }
+
+        System.out.println("Welcome to Quorridor!");
+        System.out.println("DIRECTIONS: The objective of the game is to reach the other side of the board faster than your " +
+                        "opponent.\nPlayer 1 is purple and always starts at the bottom of the board, while Player 2 is blue and starts at the top of the board.\n" +
+                "Each turn players can choose to move left, right, up, or down or place a border"+
+                " of width 2 to block the other opponent from reaching their side.\n" +
+                "Players have a limit to the number of borders they can place. This is a 2 player game can be played against a CPU.");
+
         board.print();
         int i = 1;
         while (!quit && !board.solved()) {
             i ^= 1;
             quit = handleTurn(board,i); // true if player quits
-            // TO DO: maintain score?
         }
         if (quit){
             return new GameResult(GameResult.Type.QUIT, null);
@@ -55,11 +56,12 @@ public class QuorridorGame extends Game {
         int var1, var2;
         do {
             var1 = this.input.nextInt("Enter puzzle height (min = 3): ", maxSize);
+            // user chose to quit
+            if (var1 == -1) {
+                return null;
+            }
         }while (var1 < 3 );
-        // user chose to quit
-        if (var1 == -1) {
-            return null;
-        }
+
         // since borders have a width=2, the board must have an odd width
         // to prevent the path from being blocked
         do {
@@ -91,11 +93,11 @@ public class QuorridorGame extends Game {
     private String getDirection(boolean maxBordersReached) {
         while(true) {
             if (!maxBordersReached) {
-                System.out.print("Enter 2 to switch move or");
+                System.out.print("Enter 2 to switch move or ");
             }
             String direction = this.input.nextLine("Enter direction left (L), right (R), up (U), down (D) to move: ").trim().toUpperCase();
             if (direction.equals("L") || direction.equals("R") ||
-                direction.equals("U") || direction.equals("D") || direction.equals("q")|| (direction.equals("2") && !maxBordersReached)) {
+                direction.equals("U") || direction.equals("D") || direction.equals("Q")|| (direction.equals("2") && !maxBordersReached)) {
                 return direction;
             }
             System.out.print("Invalid direction. Please enter L, R, U, or D for directions ");
@@ -110,7 +112,7 @@ public class QuorridorGame extends Game {
     public boolean handleTurn(QuorridorBoard board, int player) {
 
         System.out.printf("%s's Move: %d borders left\n", users[player].getName(), board.getBordersLeft(player));
-        if (users[player].getName() == "CPU") {
+        if (users[player].getName().equals("CPU")) {
             handleCPUTurn(board);
             return false;
         }
@@ -118,7 +120,7 @@ public class QuorridorGame extends Game {
         boolean maxBordersReached = board.getBordersLeft(player) == 0;
         // if max borders reached, force player to move
         int type;
-        boolean moveSwitched = false;
+        boolean moveSwitched;
         if (maxBordersReached) {
             System.out.println("Border limit reached. Player must move to adjacent tile.");
             type = 1;
@@ -216,7 +218,7 @@ public class QuorridorGame extends Game {
             System.err.println("The thread was interrupted during sleep.");
         }
         List<String> cpuPath = board.shortestPath(1);
-        board.move(1, users[1], cpuPath.get(0)); // first item in cpuPath is the next move
+        board.move(1, users[1], cpuPath.getFirst()); // first item in cpuPath is the next move
         board.print();
     }
 }

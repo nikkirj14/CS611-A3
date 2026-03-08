@@ -13,9 +13,5 @@ public abstract class Game {
         this.input = input;
         this.users = new Player[numPlayers];
     }
-
-    // protected abstract void initializeGame();
-    // protected abstract void explainGame();
-
     public abstract GameResult play();
 }

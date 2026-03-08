@@ -43,7 +43,7 @@ public class QuorridorBoard extends GridBoard {
     }
 
     private void printRowHorizontal(int r) {
-        printVericalKey(r);
+        printVerticalKey(r);
         for (int c = 0; c < width; c++) {
             Line l = getLine(r,c,Direction.HORIZONTAL);
             System.out.print("*");
@@ -102,7 +102,7 @@ public class QuorridorBoard extends GridBoard {
         System.out.println();
     }
 
-    private void printVericalKey(int r) {
+    private void printVerticalKey(int r) {
         char letter = (char) ('a' + r);
         System.out.printf("%s  ", letter);
     }
@@ -111,7 +111,6 @@ public class QuorridorBoard extends GridBoard {
         int rowDiff = Math.abs(a.getRow() - b.getRow());
         int colDiff = Math.abs(a.getCol() - b.getCol());
 
-        //TODO:
         // borders cannot be placed on the ends of the board
         boolean isBoardHorizontalEnd = (rowDiff == 0 && (a.getRow() ==0 || a.getRow()==height));
         boolean isBoardVerticalEnd = (colDiff == 0 && (a.getCol() ==0 || a.getCol()==width));
@@ -130,7 +129,7 @@ public class QuorridorBoard extends GridBoard {
         }
         return 0;
     }
-    // separated from validateMove so tryMove can test moves without a player
+    // separated from validateMove so tryMove can test potential moves for the CPU
     public int validatePlayerMove(String direction, int player) {
         Box currPos = position[player];
         int r = currPos.getRow();
@@ -141,7 +140,7 @@ public class QuorridorBoard extends GridBoard {
     public int validateMove(String direction, int r, int c) {
         int newRow = r;
         int newCol = c;
-        Line border = null;
+        Line border;
 
         switch (direction) {
             case "R":
@@ -180,10 +179,11 @@ public class QuorridorBoard extends GridBoard {
         if (((Box) board[newRow][newCol]).isFilled()) return 2; // tile occupied
         return 3; // valid
     }
+    // to prevent borders that completely block the opponent
     public boolean willCompletelyBlockOpponent(int player, Dot a, Dot b, Dot c) {
         int opponent = player == 0 ? 1 : 0;
 
-        // Temporarily draw the border
+        // Temporarily draws the border
         Line l1 = getLineBetween(a, c);
         Line l2 = getLineBetween(c, b);
 
@@ -199,6 +199,7 @@ public class QuorridorBoard extends GridBoard {
 
         return !reachable;
     }
+    // determines whether a winning path can be found
     private HashMap<String, Object> bfsPath(int opponent) {
         Box start = position[opponent];
         int goalRow = (opponent == 0 ? 0 : height - 1);
@@ -226,13 +227,14 @@ public class QuorridorBoard extends GridBoard {
             }
 
             // Try all 4 directions
-            tryMove(path, visited, parent, moveFromParent, r, c, "U", opponent);
-            tryMove(path, visited, parent, moveFromParent,r, c, "D", opponent);
-            tryMove(path, visited, parent, moveFromParent, r, c, "L", opponent);
-            tryMove(path, visited, parent, moveFromParent, r, c, "R", opponent);
+            tryMove(path, visited, parent, moveFromParent, r, c, "U");
+            tryMove(path, visited, parent, moveFromParent,r, c, "D");
+            tryMove(path, visited, parent, moveFromParent, r, c, "L");
+            tryMove(path, visited, parent, moveFromParent, r, c, "R");
         }
         return null;
     }
+    // for the CPU to find the shortest path to win
     public List<String> shortestPath(int player) {
         HashMap<String, Object> output = bfsPath(player);
         if (output == null) { // should never happen
@@ -252,17 +254,14 @@ public class QuorridorBoard extends GridBoard {
             int c = curr.getCol();
             String dir = moveFromParent[r][c];
             dirs.add(dir);
-            System.out.println(r + "-" + c  + " dir " + dir + " dirs " + dir);
-            System.out.println("Parents " + parent[r][c]);
             curr = parent[r][c];
         }
         Collections.reverse(dirs);
         return dirs;
     }
 
-    private void tryMove(Queue<Box> path, boolean[][] visited, Box[][] parent, String[][] moveFromParent, int r, int c, String dir, int player) {
+    private void tryMove(Queue<Box> path, boolean[][] visited, Box[][] parent, String[][] moveFromParent, int r, int c, String dir) {
         int result = validateMove(dir,r,c);
-        System.out.println(player + " " + dir + " " + result );
 
         if (result == 3) { // valid move
             int newRow = r, newCol = c;
@@ -309,9 +308,6 @@ public class QuorridorBoard extends GridBoard {
         Line line2 = getLineBetween(mid, b);
         line2.draw(player);
 
-        // TODO:
-        // check if less than max borders
-        // increment borders drawn by player
         if (playerId == 1) {
             borders1++;
         }  else if (playerId == 2) {
@@ -353,17 +349,15 @@ public class QuorridorBoard extends GridBoard {
 
     @Override
     public boolean solved() {
-        //TODO
         Box pos0 = position[0];
         Box pos1 = position[1];
         return (pos0.getRow() == 0 || pos1.getRow() == height-1);
     }
     public int getBordersLeft(int player) {
-        switch (player) {
-            case 0:
-                return maxBorders-borders1;
-            default:
-                return maxBorders-borders2;
+        if (player == 0) {
+            return maxBorders-borders1;}
+        else {
+            return maxBorders-borders2;
         }
     }
 }

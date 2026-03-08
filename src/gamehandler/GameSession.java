@@ -141,7 +141,6 @@ public class GameSession {
     }
 
     private Game initalizeGame(GameType type, Player[] participants) {
-        while (true) { 
             switch (type) {
                 case SLIDING_PUZZLE:
                     return new SlidingPuzzleGame(input, participants[0]); 
@@ -155,7 +154,6 @@ public class GameSession {
                 default:
                     throw new IllegalArgumentException("Unknown game type");
             }
-        }
     }
 
     private void announceScores() {
