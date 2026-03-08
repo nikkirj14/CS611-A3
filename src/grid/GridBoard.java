@@ -105,8 +105,6 @@ public abstract class GridBoard implements Board {
         return grid[row][col];
     }
 
-
-
     public boolean validatePoint(String str) {
         if (str.length() != 2) {
             return false;
@@ -129,6 +127,5 @@ public abstract class GridBoard implements Board {
         }
         return false;
     }
-
 
 }

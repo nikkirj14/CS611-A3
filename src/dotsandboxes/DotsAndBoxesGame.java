@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.Random;
 
+import gamehandler.GameResult;
 import iohandler.Input;
 import core.Game;
 import core.Board;
@@ -28,8 +29,9 @@ public class DotsAndBoxesGame extends Game {
     }
 
     @Override
-    public Player play() {
-        Board board = initBoard(); 
+    public GameResult play() {
+        Board board = initBoard();
+        if (board == null) return new GameResult(GameResult.Type.QUIT, null);
 
         System.out.println("");
         System.out.println("DIRECTIONS: Take turns drawing lines between two adjacent dots; scoring when you complete a box,"); 
@@ -64,17 +66,17 @@ public class DotsAndBoxesGame extends Game {
             } else {
                 System.out.printf("%s won!\n", users[0].getName());
             }
-            return users[0];
+            return new GameResult(GameResult.Type.WIN, users[0]);
         } else if (player1Score < player2Score){
             if (cpuPlayer) {
                 System.out.printf("CPU won this time :/ %n");
             } else {
                 System.out.printf("%s won!\n", users[1].getName());
             }
-            return users[1];
+            return new GameResult(GameResult.Type.WIN, users[1]);
         } else {
             System.out.println("Tie! No points scored.");
-            return null;
+            return new GameResult(GameResult.Type.TIE, null);
         }
     }
 
@@ -82,7 +84,13 @@ public class DotsAndBoxesGame extends Game {
     private Board initBoard() {
         int maxSize = 10;
         int var1 = this.input.nextInt("Enter puzzle height: ", maxSize);
+        if (var1 == -1) {
+            return null;
+        }
         int var2 = this.input.nextInt("Enter puzzle width: ", maxSize);
+        if (var2 == -1) {
+            return null;
+        }
         return new DotsAndBoxesBoard(var1, var2); 
     }
 

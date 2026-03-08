@@ -26,8 +26,10 @@ public class Line {
     public void draw(Player player) {
         this.drawn = true;
         this.drawnBy = player;
-        
-
+    }
+    public void clear() {
+        this.drawn = false;
+        this.drawnBy = null;
     }
 
     public Dot getStart() {

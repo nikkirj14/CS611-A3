@@ -1,5 +1,6 @@
 package core;
 
+import gamehandler.GameResult;
 import iohandler.Input;
 
 public abstract class Game {
@@ -16,5 +17,5 @@ public abstract class Game {
     // protected abstract void initializeGame();
     // protected abstract void explainGame();
 
-    public abstract Player play();
+    public abstract GameResult play();
 }

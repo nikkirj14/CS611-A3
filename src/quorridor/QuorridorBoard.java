@@ -1,7 +1,5 @@
 package quorridor;
 
-import java.util.function.DoubleToIntFunction;
-
 import core.Player;
 import grid.Box;
 import grid.Direction;
@@ -9,28 +7,28 @@ import grid.Dot;
 import grid.GridBoard;
 import grid.Line;
 
+import java.util.*;
+
 public class QuorridorBoard extends GridBoard {
 
     protected int maxBorders;
     protected Box[] position;
-
     protected int borders1;
     protected int borders2;
 
     QuorridorBoard(int h, int w, Player[] players) {
+        if (w % 2 == 0) {
+            throw new IllegalArgumentException("W should be odd");
+        }
         super(h,w);
         maxBorders = Math.max(h,w) - 1;
         position = new Box[2];
         position[0] = (Box) board[h-1][w/2];
         ((Box) board[h-1][w/2]).fill(players[0]);
 
-        if (w % 2 != 0) {
-            position[1] = (Box) board[0][w/2];
-            ((Box) board[0][w/2]).fill(players[1]);
-        } else {    
-            position[1] = (Box) board[0][w/2-1]; 
-            ((Box) board[0][w/2-1]).fill(players[1]);   
-        }     
+        // odd width board
+        position[1] = (Box) board[0][w/2];
+        ((Box) board[0][w/2]).fill(players[1]);
     }
 
     @Override
@@ -109,32 +107,38 @@ public class QuorridorBoard extends GridBoard {
         System.out.printf("%s  ", letter);
     }
 
-    public int validateBorder(Dot a , Dot b) {
+    public int validateBorder(int player, Dot a , Dot b) {
         int rowDiff = Math.abs(a.getRow() - b.getRow());
         int colDiff = Math.abs(a.getCol() - b.getCol());
 
-        if ((rowDiff == 2 && colDiff == 0) || (rowDiff == 0 && colDiff == 2)) {
+        //TODO:
+        // borders cannot be placed on the ends of the board
+        boolean isBoardHorizontalEnd = (rowDiff == 0 && (a.getRow() ==0 || a.getRow()==height));
+        boolean isBoardVerticalEnd = (colDiff == 0 && (a.getCol() ==0 || a.getCol()==width));
+
+        if (!isBoardHorizontalEnd && !isBoardVerticalEnd && ((rowDiff == 2 && colDiff == 0) || (rowDiff == 0 && colDiff == 2))) {
             Dot mid = getMidpoint(a,b);
             Line line1 = getLineBetween(a,mid);
             Line line2 = getLineBetween(mid,b);
             if (line1.isEmpty() && line2.isEmpty()) {
 
-                if (willCompletelyBlockOpponent(a,mid,b)) {
+                if (willCompletelyBlockOpponent(player, a,mid,b)) {
                     return 2;
                 }
                 return 1;
             }
         }
-
         return 0;
     }
-
-    public int validateMove(String direction, int player) {
-    
+    // separated from validateMove so tryMove can test moves without a player
+    public int validatePlayerMove(String direction, int player) {
         Box currPos = position[player];
         int r = currPos.getRow();
         int c = currPos.getCol();
 
+        return validateMove(direction, r, c);
+    }
+    public int validateMove(String direction, int r, int c) {
         int newRow = r;
         int newCol = c;
         Line border = null;
@@ -152,7 +156,7 @@ public class QuorridorBoard extends GridBoard {
                 if (newCol < 0) {
                     return 0;
                 }
-                border = verticalLines[r][c]; 
+                border = verticalLines[r][c];
                 break;
             case "U":
                 newRow = r - 1;
@@ -172,16 +176,131 @@ public class QuorridorBoard extends GridBoard {
                 return 0;
         }
 
-        if (border.isDrawn()) return 1;          // blocked by border
+        if (border.isDrawn()) return 1; // blocked by border
         if (((Box) board[newRow][newCol]).isFilled()) return 2; // tile occupied
         return 3; // valid
     }
+    public boolean willCompletelyBlockOpponent(int player, Dot a, Dot b, Dot c) {
+        int opponent = player == 0 ? 1 : 0;
 
-    public boolean willCompletelyBlockOpponent(Dot a, Dot b, Dot c) {
-        return false; //TODO
+        // Temporarily draw the border
+        Line l1 = getLineBetween(a, c);
+        Line l2 = getLineBetween(c, b);
+
+        Player temp = new Player("dummy", -1);
+        l1.draw(temp);
+        l2.draw(temp);
+
+        // Run BFS to see if opponent still has a path
+        boolean reachable = bfsPath(opponent) != null;
+
+        l1.clear();
+        l2.clear();
+
+        return !reachable;
+    }
+    private HashMap<String, Object> bfsPath(int opponent) {
+        Box start = position[opponent];
+        int goalRow = (opponent == 0 ? 0 : height - 1);
+        boolean[][] visited = new boolean[height][width];
+        Box[][] parent = new Box[height][width];
+        String[][] moveFromParent = new String[height][width];
+        Queue<Box> path = new LinkedList<>();
+
+        path.add(start);
+        visited[start.getRow()][start.getCol()] = true;
+
+        while (!path.isEmpty()) {
+            Box curr = path.poll();
+            int r = curr.getRow();
+            int c = curr.getCol();
+
+            // Once you've reached the goal row, you know the path exists!
+            if (r == goalRow) {
+                HashMap<String, Object> output = new HashMap();
+                output.put("goal", curr);
+                output.put("visited", visited);
+                output.put("parent", parent);
+                output.put("moveFromParent", moveFromParent);
+                return output;
+            }
+
+            // Try all 4 directions
+            tryMove(path, visited, parent, moveFromParent, r, c, "U", opponent);
+            tryMove(path, visited, parent, moveFromParent,r, c, "D", opponent);
+            tryMove(path, visited, parent, moveFromParent, r, c, "L", opponent);
+            tryMove(path, visited, parent, moveFromParent, r, c, "R", opponent);
+        }
+        return null;
+    }
+    public List<String> shortestPath(int player) {
+        HashMap<String, Object> output = bfsPath(player);
+        if (output == null) { // should never happen
+            throw new NullPointerException("CPU cannot reach the end of the board.");
+        }
+
+        Box goal = (Box) output.get("goal");
+
+        // Reconstruct path
+        Box[][] parent = (Box[][]) output.get("parent");
+        String[][] moveFromParent = (String[][]) output.get("moveFromParent");
+        List<String> dirs = new ArrayList<>();
+        Box curr = goal;
+        Box start = position[player];
+        while (curr != start) {
+            int r = curr.getRow();
+            int c = curr.getCol();
+            String dir = moveFromParent[r][c];
+            dirs.add(dir);
+            System.out.println(r + "-" + c  + " dir " + dir + " dirs " + dir);
+            System.out.println("Parents " + parent[r][c]);
+            curr = parent[r][c];
+        }
+        Collections.reverse(dirs);
+        return dirs;
     }
 
+    private void tryMove(Queue<Box> path, boolean[][] visited, Box[][] parent, String[][] moveFromParent, int r, int c, String dir, int player) {
+        int result = validateMove(dir,r,c);
+        System.out.println(player + " " + dir + " " + result );
+
+        if (result == 3) { // valid move
+            int newRow = r, newCol = c;
+            Line border = null;
+            switch (dir) {
+                case "U":
+                    newRow--;
+                    border = horizontalLines[r][c]; // up
+                    break;
+                case "D":
+                    newRow++;
+                    border = horizontalLines[r+1][c]; // down
+                    break;
+                case "L":
+                    newCol--;
+                    border = verticalLines[r][c];  // left
+                    break;
+                case "R":
+                    newCol++;
+                    border = verticalLines[r][c+1]; // right
+                    break;
+            }
+            // bounds
+            if (newRow < 0 || newRow >= height || newCol < 0 || newCol >= width) return;
+
+            // if hit a border, return
+            if (border.isDrawn()) return;
+
+            if (!visited[newRow][newCol]) {
+                visited[newRow][newCol] = true;
+                parent[newRow][newCol] = (Box)board[r][c];
+                moveFromParent[newRow][newCol] = dir;
+                path.add((Box) board[newRow][newCol]);
+            }
+        }
+    }
     public void drawBorder(Dot a, Dot b, Player player) {
+        int playerId = player.getNumber();
         Dot mid = getMidpoint(a, b); // for borders that span 2 units
 
         Line line1 = getLineBetween(a, mid);
@@ -190,10 +309,14 @@ public class QuorridorBoard extends GridBoard {
         Line line2 = getLineBetween(mid, b);
         line2.draw(player);
 
-
-        // TODO: 
+        // TODO:
         // check if less than max borders
         // increment borders drawn by player
+        if (playerId == 1) {
+            borders1++;
+        }  else if (playerId == 2) {
+            borders2++;
+        }
     }
 
     private Dot getMidpoint(Dot a , Dot b) {
@@ -230,8 +353,17 @@ public class QuorridorBoard extends GridBoard {
 
     @Override
     public boolean solved() {
-        return false; //TODO
+        //TODO
+        Box pos0 = position[0];
+        Box pos1 = position[1];
+        return (pos0.getRow() == 0 || pos1.getRow() == height-1);
     }
-
-
+    public int getBordersLeft(int player) {
+        switch (player) {
+            case 0:
+                return maxBorders-borders1;
+            default:
+                return maxBorders-borders2;
+        }
+    }
 }

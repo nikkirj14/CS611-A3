@@ -16,26 +16,32 @@ public class GameSession {
     }
 
     public void start() {
-
-        initializePlayers();
-
-        boolean playing = true;
+        System.out.println("Welcome to the Game Session! Enter q at any time to quit the game.");
+        boolean playing = initializePlayers(); // false if quit
 
         while (playing) {
 
             GameType type = chooseGame();
+            if (type == null){
+                break;
+            }
 
             Player[] participants = chooseParticipants(type);
 
             Game game = initalizeGame(type, participants);
 
-            Player winner = game.play();
+            GameResult result = game.play();
+            Player winner = result.getWinner();
+            if (winner == null){
+                break;
+            }
             winner.incrementScore();
             
             announceScores();
 
             playing = askReplay();
         }
+        quitMessage();
     }
 
     private GameType chooseGame() {
@@ -48,6 +54,8 @@ public class GameSession {
             int choice = input.nextInt("Enter game choice: ", 3);
 
             switch (choice) {
+                case -1:
+                    return null;
                 case 1:
                     return GameType.SLIDING_PUZZLE;
 
@@ -55,10 +63,6 @@ public class GameSession {
                     return GameType.DOTS_AND_BOXES;
                 
                 case 3:
-                    if (players.length < 2) {
-                        System.out.println("Two players needed for this game! Pick another game or restart session.");
-                        continue;
-                    }
                     return GameType.QUORRIDOR;
 
                 default:
@@ -67,15 +71,17 @@ public class GameSession {
         }
     }
 
-    public void initializePlayers() {
-
+    private boolean initializePlayers() {
         int maxPlayers = 2;
         int minPlayers = 1;
         int count; 
 
         do {
             count = input.nextInt("Enter number of players (" + minPlayers + "-" + maxPlayers + "): ", maxPlayers);
-
+            // player quits
+            if (count == -1) {
+                return false;
+            }
         } while (count < minPlayers || count > maxPlayers);
 
         players = new Player[count];
@@ -83,6 +89,7 @@ public class GameSession {
             String name = input.nextLine("Enter name for Player " + (i + 1) + ": ");
             players[i] = new Player(name,i+1);
         }
+        return true;
 
     }
 
@@ -151,7 +158,7 @@ public class GameSession {
         }
     }
 
-    public void announceScores() {
+    private void announceScores() {
 
         int width = 46;
 
@@ -172,7 +179,7 @@ public class GameSession {
         System.out.println();
     }
 
-    public boolean askReplay() {
+    private boolean askReplay() {
         while (true) {
             String answer = input.nextLine("Do you want to play another game? (Y/N) ");
 
@@ -182,10 +189,14 @@ public class GameSession {
             else if (answer.equalsIgnoreCase("N")) {
                 System.out.println("Have a good day :D");
                 return false;
-            } 
+            }
             else {
                 System.out.println("Invalid input! Please type Y or N.");
             }
         }
+    }
+    // quit message
+    private void quitMessage() {
+        System.out.println("You quit the game.");
     }
 }

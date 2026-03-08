@@ -11,14 +11,6 @@ import grid.Dot;
 import grid.Line;
 
 public class DotsAndBoxesBoard extends GridBoard {
-
-    // int height;
-    // int width;
-    // private final Tile[][] board;
-    // private Dot[][] grid;
-    // private Line[][] horizontalLines;
-    // private Line[][] verticalLines;
-
     public DotsAndBoxesBoard(int h, int w) {
         super(h,w);
     }
