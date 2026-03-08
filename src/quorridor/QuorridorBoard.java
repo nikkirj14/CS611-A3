@@ -11,10 +11,10 @@ import java.util.*;
 
 public class QuorridorBoard extends GridBoard {
 
-    protected int maxBorders;
-    protected Box[] position;
-    protected int borders1;
-    protected int borders2;
+    private int maxBorders;
+    private Box[] position;
+    private int borders1;
+    private int borders2;
 
     QuorridorBoard(int h, int w, Player[] players) {
         if (w % 2 == 0) {

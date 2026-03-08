@@ -28,7 +28,7 @@ public class DotsAndBoxesBoard extends GridBoard {
 
 
     private void printRowHorizontal(int r) {
-        printVericalKey(r);
+        printVerticalKey(r);
         for (int c = 0; c < width; c++) {
             Line l = getLine(r,c,Direction.HORIZONTAL);
             System.out.print("*");
@@ -88,7 +88,7 @@ public class DotsAndBoxesBoard extends GridBoard {
         System.out.println();
     }
 
-    private void printVericalKey(int r) {
+    private void printVerticalKey(int r) {
         char letter = (char) ('a' + r);
         System.out.printf("%s  ", letter);
     }

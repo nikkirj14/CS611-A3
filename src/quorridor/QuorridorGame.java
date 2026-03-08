@@ -85,11 +85,6 @@ public class QuorridorGame extends Game {
     private String getEndInput() {
         return this.input.nextLine("Enter end point or 1 to switch move: ");
     }
-
-    public Player getPlayer(int index) {
-        return users[index];
-    }
-
     private String getDirection(boolean maxBordersReached) {
         while(true) {
             if (!maxBordersReached) {
