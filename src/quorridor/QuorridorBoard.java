@@ -16,11 +16,8 @@ public class QuorridorBoard extends GridBoard {
     private int borders1;
     private int borders2;
 
-    QuorridorBoard(int h, int w, Player[] players) {
-        if (w % 2 == 0) {
-            throw new IllegalArgumentException("W should be odd");
-        }
-        super(h,w);
+    public QuorridorBoard(int h, int w, Player[] players) {
+        super(h,validateWidth(w));
         maxBorders = Math.max(h,w) - 1;
         position = new Box[2];
         position[0] = (Box) board[h-1][w/2];
@@ -29,6 +26,12 @@ public class QuorridorBoard extends GridBoard {
         // odd width board
         position[1] = (Box) board[0][w/2];
         ((Box) board[0][w/2]).fill(players[1]);
+    }
+    private static int validateWidth(int w) {
+        if (w % 2 == 0) {
+            throw new IllegalArgumentException("W should be odd");
+        }
+        return w;
     }
 
     @Override

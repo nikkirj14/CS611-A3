@@ -213,7 +213,7 @@ public class QuorridorGame extends Game {
             System.err.println("The thread was interrupted during sleep.");
         }
         List<String> cpuPath = board.shortestPath(1);
-        board.move(1, users[1], cpuPath.getFirst()); // first item in cpuPath is the next move
+        board.move(1, users[1], cpuPath.get(0)); // first item in cpuPath is the next move
         board.print();
     }
 }
